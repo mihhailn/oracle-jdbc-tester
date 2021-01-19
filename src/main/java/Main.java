@@ -19,7 +19,7 @@ public class Main {
 
         Class.forName("oracle.jdbc.driver.OracleDriver");
 
-        if (args.length != 3) {
+        if (args.length != 4) {
             LOG.error("Invalid number of arguments: Must provide 3 arguments in the format: <schema_name> <schema_password> jdbc:oracle:thin:@//<host>:<port>/<SID>");
             return;
         }
@@ -31,16 +31,23 @@ public class Main {
 
         try {
             LOG.info("****** Starting JDBC Connection test *******");
-            String sqlQuery = "select sysdate from dual";
+            String sqlQuery = args[3];
 
             Connection conn = DriverManager.getConnection(args[2], properties);
             conn.setAutoCommit(false);
             Statement statement = conn.createStatement();
             LOG.info("Running SQL query: [{}]", sqlQuery);
-            ResultSet resultSet = statement.executeQuery(sqlQuery);
 
+            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            ResultSetMetaData rsmd = resultSet.getMetaData();
+            int columnsNumber = rsmd.getColumnCount();
             while (resultSet.next()) {
-                LOG.info("Result of SQL query: [{}]", resultSet.getString(1));
+                for (int i = 1; i <= columnsNumber; i++) {
+                    if (i > 1) System.out.print(",  ");
+                    String columnValue = resultSet.getString(i);
+                    System.out.print(columnValue + " " + rsmd.getColumnName(i));
+                }
+                System.out.println("");
             }
             statement.close();
             LOG.info("JDBC connection test successful!");
